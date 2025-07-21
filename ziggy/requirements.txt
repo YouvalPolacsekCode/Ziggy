@@ -1,0 +1,16 @@
+requests
+openai
+speechrecognition
+python-telegram-bot==20.6
+flask
+zigpy
+pyaudio
+ffmpeg-python
+pyyaml
+python-dotenv
+watchdog
+bellows
+zigpy-znp
+zha-quirks
+RPi.GPIO
+gpiozero 

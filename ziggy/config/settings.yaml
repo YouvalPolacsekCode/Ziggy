@@ -1,0 +1,46 @@
+openai:
+  api_key: "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"
+
+telegram:
+  enabled: true
+  bot_token: "7805408143:AAHsLHS78_XOWyrRXl2MxMi0REGFrbagBxs"
+  allowed_users:
+    - 316341835 
+
+ifttt:
+  webhook_key: "YOUR_IFTTT_WEBHOOK_KEY"
+  triggers:
+    - light_on
+    - light_off
+    - send_notification
+
+voice:
+  enabled: true
+  language: "he"
+  mic_index: 0
+  wake_word: "hey ziggy"
+  tts_engine: "pico"  # Or "gtts"
+
+language: "en"
+
+roles:
+  superadmin: ["youval"]
+  trusted_users: []
+  guests: []
+
+features:
+  file_management: true
+  task_tracking: true
+  buddy_mode: true
+  smart_home: true
+  zigbee_support: true
+  ifttt: true
+  telegram: true
+  voice: true
+  local_storage: true
+
+paths:
+  memory_log: "memory/memory_log.json"
+  task_log: "memory/task_log.json"
+  file_store: "files/"
+  logs: "logs/"
