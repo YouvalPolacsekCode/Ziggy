@@ -14,3 +14,4 @@ zigpy-znp
 zha-quirks
 RPi.GPIO
 gpiozero 
+paho-mqtt

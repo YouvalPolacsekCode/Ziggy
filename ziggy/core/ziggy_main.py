@@ -43,17 +43,20 @@ time.tzset()
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, BASE_DIR)
 
-# ✅ Import settings from intent_parser
-from core.intent_parser import settings
+# ✅ Import settings
+from core.intent_parser import settings # Assuming settings is still here
 
 # ── Core Ziggy modules ──────────────────────────────────────────────────────────
 from voice.voice_interface import VoiceAssistant
 from core import intent_parser
 from memory import memory_manager
-from smart_home import device_controller
+from smart_home.device_controller import MqttDeviceController # Modified import
 from integrations import ifttt_handler
 from tasks import task_manager
 from files import file_manager
+
+# --- Global variable for MQTT Device Controller ---
+mqtt_device_controller = None
 
 # ── Command router ─────────────────────────────────────────────────────────────
 def handle_command(text: str, lang: str) -> None:
@@ -80,17 +83,20 @@ def handle_command(text: str, lang: str) -> None:
                  f"The weather in {location} is sunny and pleasant")
 
     elif intent == "control_device":
-        device = params.get("device")
-        action = params.get("action")
-        if device and action:
-            if action == "on":
-                device_controller.turn_on(device)
-                say_auto(f"{device} הופעל", f"{device} turned on")
-            elif action == "off":
-                device_controller.turn_off(device)
-                say_auto(f"{device} כובה", f"{device} turned off")
-        else:
-            say_auto("יש לציין שם התקן ופעולה", "Please specify device and action")
+            device = params.get("device")
+            action = params.get("action")
+            value = params.get("value") # Get the value from params
+
+            if device and action:
+                if mqtt_device_controller: # Check if controller is initialized
+                    # Call the updated control_device with device name, action, and value
+                    mqtt_device_controller.control_device(device, action, value)
+                    # You might want to refine this feedback based on the action and value
+                    say_auto(f"{device} הופעל/כובה", f"{device} command sent: {action} with value {value} (via MQTT)") # Updated feedback
+                else:
+                    say_auto("שליטה על התקנים אינה מופעלת", "Device control is not enabled")
+            else:
+                say_auto("יש לציין שם התקן ופעולה", "Please specify device and action")
 
     elif intent == "chat_with_gpt":
         prompt = params.get("text", "")
@@ -232,11 +238,37 @@ if __name__ == "__main__":
     print("🚀 Ziggy is booting…")
 
     suppress_audio_stderr()  # Only suppress during audio startup
-    voice = VoiceAssistant(language="auto", mic_index=1)
+    voice = VoiceAssistant(language="auto", mic_index=settings["voice"]["mic_index"])
+
+    # --- MQTT Controller Initialization ---
+    # Read MQTT settings and device configurations from settings.yaml
+    mqtt_settings = settings.get("mqtt", {})
+    mqtt_broker_address = mqtt_settings.get("broker_address")
+    mqtt_broker_port = mqtt_settings.get("broker_port", 1883)
+    mqtt_username = mqtt_settings.get("username")
+    mqtt_password = mqtt_settings.get("password")
+    devices_config = settings.get("devices", {}) # Read device configurations
+
+    global mqtt_device_controller
+    if mqtt_broker_address:
+        mqtt_device_controller = MqttDeviceController(
+            mqtt_broker_address,
+            mqtt_broker_port,
+            mqtt_username,
+            mqtt_password,
+            devices_config # Pass device configurations
+        )
+        mqtt_device_controller.connect()
+        print("[MQTT] Attempting to connect to MQTT broker")
+    else:
+        print("[MQTT] MQTT broker address not configured. MQTT device control disabled.")
+    # --- End MQTT Controller Initialization ---
+
 
     memory_manager.load_memory()
     voice.say("זיגי מוכן")
 
+    # The handle_command function uses the global mqtt_device_controller
     voice_thread = threading.Thread(target=start_voice_listener)
     telegram_thread = threading.Thread(target=start_telegram_bot)
 

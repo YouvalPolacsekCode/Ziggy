@@ -39,8 +39,29 @@ features:
   voice: true
   local_storage: true
 
+mqtt:
+  broker_address: "your_mqtt_broker_address"
+  broker_port: 1883
+  username: "your_mqtt_username" # Optional
+  password: "your_mqtt_password" # Optional
+
 paths:
   memory_log: "memory/memory_log.json"
   task_log: "memory/task_log.json"
   file_store: "files/"
   logs: "logs/"
+
+devices:
+  living_room_light:
+    component: light
+    object_id: living_room_light
+    command_topic: "homeassistant/light/living_room_light/set"
+    state_topic: "homeassistant/light/living_room_light/state" # Optional, for state feedback
+  bedroom_lamp:
+    component: light
+    object_id: bedroom_lamp
+    command_topic: "homeassistant/light/bedroom_lamp/set"
+  thermostat:
+    component: climate
+    object_id: thermostat
+    command_topic: "homeassistant/climate/thermostat/set"
